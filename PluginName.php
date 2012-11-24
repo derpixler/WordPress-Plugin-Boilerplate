@@ -8,9 +8,9 @@ Author: Name Nachname
 Author URI: http://www.awsome-wordpress-plugin.com
 Author Email: info@awsome-wordpress-plugin.com
 Author google profile ID: 116520935691953756105
-Author twitter: https://twitter.com/DerPixler
+Author twitter: https://twitter.com/awsome-wordpress-plugin
 Company Name: The Awsome Wordpress Plugin Company
-Company URI: http://www.rene-reimann.de
+Company URI:  http://www.awsome-wordpress-plugin.com
 License:
 
   Copyright 2012 TODO (email@domain.com)
