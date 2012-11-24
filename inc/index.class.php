@@ -36,6 +36,10 @@ if( ! class_exists( 'PluginName' ) ){
 				add_filter( 'plugin_row_meta',  array( &$this, 'plugin_row_meta_link' ), 10, 2 );
                 add_filter( 'extra_plugin_headers',  array( &$this, 'add_extra_plugin_headers' ) );
                 
+                register_activation_hook( __FILE__, array( $this, 'activate' ) );
+                register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
+                register_uninstall_hook( __FILE__, array( $this, 'uninstall' ) );
+                
 				if( defined('WP_UNINSTALL_PLUGIN') || $_GET['action'] == 'unistall' && $_GET['plugin'] == self::$plugin_obj->name ){
 
 					// Include the Database class
@@ -134,6 +138,33 @@ if( ! class_exists( 'PluginName' ) ){
 		
 		}
         
+        
+        /**
+         * Fired when the plugin is activated.
+         *
+         * @params	$network_wide	True if WPMU superadmin uses "Network Activate" action, false if WPMU is disabled or plugin is activated on an individual blog 
+         */
+        public function activate( $network_wide ) {
+            // TODO define activation functionality here
+        } // end activate
+
+        /**
+         * Fired when the plugin is deactivated.
+         *
+         * @params	$network_wide	True if WPMU superadmin uses "Network Activate" action, false if WPMU is disabled or plugin is activated on an individual blog 
+         */
+        public function deactivate( $network_wide ) {
+            // TODO define deactivation functionality here		
+        } // end deactivate
+
+        /**
+         * Fired when the plugin is uninstalled.
+         *
+         * @params	$network_wide	True if WPMU superadmin uses "Network Activate" action, false if WPMU is disabled or plugin is activated on an individual blog 
+         */
+        public function uninstall( $network_wide ) {
+            // TODO define uninstall functionality here		
+        } // end uninstall
 
         
 		private function set_plugin_name(){
