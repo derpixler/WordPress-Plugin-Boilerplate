@@ -27,11 +27,11 @@ class PluginName_unistall_class extends PluginName {
 	
 	private function cleanup_options(){
 		global $wpdb;
-		
-		$options = $wpdb->get_results("SELECT * FROM `" . $wpdb->options . "` WHERE  `option_name` LIKE  'PluginName%'"); 
-		
+
+		$options = $wpdb->get_results("SELECT * FROM `" . $wpdb->options . "` WHERE  `option_name` LIKE  'PluginName%'"); 	
+        
 		foreach( $options as $option ){
-			$wpdb->query( "DELETE FROM `" . $wpdb->dbname . "`.`" . $wpdb->options . "` WHERE `" . $wpdb->options . "`.`option_id` = " . $option->option_id  );
+            $wpdb->query( "DELETE FROM `" . $wpdb->dbname . "`.`" . $wpdb->options . "` WHERE `" . $wpdb->options . "`.`option_name` = '" . $option->option_name . "'");
 		}
 		
 		add_action('admin_notices', array( &$this, 'unistall_admin_notice' ) );
@@ -39,7 +39,8 @@ class PluginName_unistall_class extends PluginName {
 	}
 
 	public function unistall_admin_notice(){
-		echo '<div id="message" class="updated"><p>'. __( '<b>the Plugin</b> is now deinstalled and cleaned up!', parent::$plugin_obj->class_name ) .'</p></div>';
+		echo '<div id="message" class="updated"><p>'. sprintf(__( "The Plugin <b>%s</b> was uninstalled and cleaned up!", parent::$plugin_obj->class_name ), parent::$plugin_obj->the_plugin->name ) .'</p></div>';
 	}
 
+    
 }

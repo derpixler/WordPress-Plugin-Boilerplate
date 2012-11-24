@@ -7,7 +7,7 @@ if( ! class_exists( 'PluginName' ) ){
 	
 		
 		public static $plugin_obj	= false;
-		private static $db 		= false;
+		private static $db          = false;
 		
 		/**
 		 * Constructor
@@ -18,31 +18,34 @@ if( ! class_exists( 'PluginName' ) ){
 		 * @param array $plugin_data plugin data like Autor, Version, Name ...
 		 */
 		function __construct( $plugin_basename ) {
-
+            
 			//Catch some useful information about the pluign in the $plugin_obj
 			self::$plugin_obj->class_name 	= __CLASS__;
-			self::$plugin_obj->name 	= self::set_plugin_name();
-			self::$plugin_obj->base		= $plugin_basename;
-			self::$plugin_obj->path 	= str_replace( '/inc', '', plugin_dir_path(__FILE__) );
+			self::$plugin_obj->name         = self::set_plugin_name();
+			self::$plugin_obj->base         = $plugin_basename;
+			self::$plugin_obj->path         = str_replace( '/inc', '', plugin_dir_path(__FILE__) );
 			self::$plugin_obj->include_path = plugin_dir_path(__FILE__);
-			self::$plugin_obj->url 		= str_replace( '/inc', '', plugin_dir_url(__FILE__) );
-			self::$plugin_obj->Version	= self::get_plugin_version();
+			self::$plugin_obj->url          = str_replace( '/inc', '', plugin_dir_url(__FILE__) );
+			self::$plugin_obj->the_plugin   = self::get_plugin_data();
 			
 			load_plugin_textdomain( self::$plugin_obj->class_name, false, self::$plugin_obj->name  . '/lang/' );
-			
+            
 			if(is_admin()){
 				
 				// add row meta links
-				add_filter( 'plugin_row_meta',  array( __CLASS__, 'plugin_row_meta_link' ), 10, 2 );
-				
-				if( defined('WP_UNINSTALL_PLUGIN') || $_GET['action'] == 'unistall' ){
-				 	
+				add_filter( 'plugin_row_meta',  array( &$this, 'plugin_row_meta_link' ), 10, 2 );
+                add_filter( 'extra_plugin_headers',  array( &$this, 'add_extra_plugin_headers' ) );
+                
+				if( defined('WP_UNINSTALL_PLUGIN') || $_GET['action'] == 'unistall' && $_GET['plugin'] == self::$plugin_obj->name ){
+
 					// Include the Database class
 					require_once( self::$plugin_obj->include_path  . "/unistall.class.php" );
 					
 					new PluginName_unistall_class();
-					
+                    
 				}else{
+                    
+                    
 				
 					// Include the Database class
 					require_once( self::$plugin_obj->include_path  . "/db.class.php" );
@@ -56,7 +59,7 @@ if( ! class_exists( 'PluginName' ) ){
 					*/
 					self::$db = new PluginName_db_class();
 				
-					// Update and setup Database
+                    // Update and setup Database
 					self::update_db();
 					
 					// Register admin styles and scripts
@@ -66,11 +69,10 @@ if( ! class_exists( 'PluginName' ) ){
 	            	
 					// Add Uninstall action link
 					add_action( 'plugin_action_links_' . self::$plugin_obj->base, array( &$this, 'uninstall_action_link' ) );
-	
 				}
 				
 			}else{
-			
+			 
 				// Register site styles and scripts
 				add_action( 'wp_print_styles', array( &$this, 'register_plugin_styles' ) );
 				add_action( 'wp_enqueue_scripts', array( &$this, 'register_plugin_scripts' ) );
@@ -130,44 +132,50 @@ if( ! class_exists( 'PluginName' ) ){
 			wp_register_script( self::$plugin_obj->name . '-plugin-script', plugins_url( self::$plugin_obj->name . '/js/display.js' ) );
 			wp_enqueue_script( self::$plugin_obj->name . '-plugin-script' );
 		
-		} // end register_plugin_scripts
-		
-		
+		}
+        
+
+        
 		private function set_plugin_name(){
 			$plugin_basename = explode( '/', plugin_basename(__FILE__) );
 			return $plugin_basename[0];
 		}
 		
 		
-		private function get_plugin_version(){
+		private function get_plugin_data(){
 			
 			$filePath = self::$plugin_obj->path . self::$plugin_obj->class_name . '.php';
 			
-			if(is_readable($filePath)){
-	      		$fp = fopen($filePath, 'r');
+			if( is_readable( $filePath ) ){
+	      		$fp = fopen( $filePath, 'r');
 			
 				if(filesize($filePath) > 0){
-	      				$content = fread($fp,filesize($filePath));
-					preg_match('/Version:\s(.*?)\s/',$content,$version);
+	      			$content = fread( $fp,filesize($filePath) );
+                    preg_match( '/Version:\s(.*?)\s/', $content, $version );
+                    preg_match( '/Plugin Name:\s(.*?)\R/', $content, $plugin_name );
 
-					return $version[1];
+                    $plugin_data->name      = $plugin_name[1];
+                    $plugin_data->version   = $version[1];
+                    
+					return $plugin_data;
 				}else{
 					fclose ($fp);
 					return false;
 				}
 			}
 		}
-		
+        
 		
 		private function update_db(){
-			
-			if( get_option( self::$plugin_obj->class_name  . '_version' ) != self::$plugin_obj->Version ){
-			
-				update_option( self::$plugin_obj->class_name  . '_version', self::$plugin_obj->Version );
+            
+			if( get_option( self::$plugin_obj->class_name  . '_version' ) != self::$plugin_obj->the_plugin->version ){			
+                update_option( self::$plugin_obj->class_name  . '_version', self::$plugin_obj->the_plugin->version );
 				self::$db->create_db_tables();
 			}
 			
 		}
+        
+       
 		
 		/**
 		  * Add unistall action link for the Plugin!
@@ -179,8 +187,7 @@ if( ! class_exists( 'PluginName' ) ){
 		public function uninstall_action_link( $action_links ){ 
 			
 		 $action_links['unistall'] = '<span class="delete"><a href="'. admin_url() .'plugins.php?action=unistall&plugin=' . self::$plugin_obj->name  . '" title="' . __( 'Unistall this plugin', self::$plugin_obj->class_name ) . '" class="delete">' . __( 'Unistall', self::$plugin_obj->class_name )  . '</a></span>';
-		 unset( $action_links['deactivate'] );
-		
+		 
 		 return $action_links;
 		
 		}
@@ -196,19 +203,49 @@ if( ! class_exists( 'PluginName' ) ){
 		*/
 		public function plugin_row_meta_link($data, $page){
 
+            self::$plugin_obj->plugin_data = get_plugin_data( self::$plugin_obj->path . self::$plugin_obj->class_name . '.php' );
+            
+            
 			if ( $page != self::$plugin_obj->base ) {
 				return $data;
 			}
-        
-			return array_merge(
-				$data,
-				array(
-					'<a href="https://plus.google.com/116520935691953756105" target="_blank">' . __( 'follow me on Google+', self::$plugin_obj->class_name ) . '</a>'
-				)
-			);
+            
+            $meta_data = array();
+            
+            if( self::$plugin_obj->plugin_data['Author Google Profile ID'] ){
+               $meta_data[0] =  '<a href="https://plus.google.com/u/0/' . self::$plugin_obj->plugin_data['Author Google Profile ID'] . '/about" target="_blank">' . __( 'Google+', self::$plugin_obj->class_name ) . '</a>';                   
+            }
+            
+            if( self::$plugin_obj->plugin_data['Author twitter'] ){
+               $meta_data[1] =  '<a href="' . self::$plugin_obj->plugin_data['Author twitter'] . '" target="_blank">' . __( 'Twitter', self::$plugin_obj->class_name ) . '</a>';                   
+            }
+            
+            if( self::$plugin_obj->plugin_data['Company Name'] ){
+               if( self::$plugin_obj->plugin_data['Company URI'] ){
+                $meta_data[2] =  __( 'Company', self::$plugin_obj->class_name ) . ': <a href="' . self::$plugin_obj->plugin_data['Company URI'] . '" target="_blank">' . self::$plugin_obj->plugin_data['Company Name'] . '</a>';  
+               }else{
+                $meta_data[2] =  __( 'Company', self::$plugin_obj->class_name ) . ': ' . self::$plugin_obj->plugin_data['Company Name']; 
+               }
+            }
+            
+			return array_merge( $data, $meta_data );
 			
 		}
-				
+			
+        
+        public function add_extra_plugin_headers(){
+            $extra_headers = array( 
+                                'Author Google Profile ID',
+                                'Author twitter',
+                                'Company Name',
+                                'Company URI'
+                                );
+            
+
+            
+            return $extra_headers;
+        }
+        
 				
 		/*--------------------------------------------*
 		 * Core Functions
@@ -222,7 +259,7 @@ if( ! class_exists( 'PluginName' ) ){
 		 *		  Action Reference:  http://codex.wordpress.org/Plugin_API/Action_Reference
 		 *
 		 */
-		function action_method_name() {
+		public function action_method_name() {
 	    	// TODO define your action method here
 		} // end action_method_name
 		
@@ -234,7 +271,7 @@ if( ! class_exists( 'PluginName' ) ){
 		 *		  Filter Reference:  http://codex.wordpress.org/Plugin_API/Filter_Reference
 		 *
 		 */
-		function filter_method_name() {
+		public function filter_method_name() {
 		    // TODO define your filter method here
 		} // end filter_method_name
 	  

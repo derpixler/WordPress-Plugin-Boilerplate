@@ -4,9 +4,13 @@ Plugin Name: TODO
 Plugin URI: TODO
 Description: TODO
 Version: 1.0
-Author: TODO
-Author URI: TODO
-Author Email: TODO
+Author: Name Nachname
+Author URI: http://www.awsome-wordpress-plugin.com
+Author Email: info@awsome-wordpress-plugin.com
+Author google profile ID: 116520935691953756105
+Author twitter: https://twitter.com/DerPixler
+Company Name: The Awsome Wordpress Plugin Company
+Company URI: http://www.rene-reimann.de
 License:
 
   Copyright 2012 TODO (email@domain.com)
@@ -39,28 +43,5 @@ function init_PluginName(){
 	new PluginName( plugin_basename(__FILE__) );
 }
 
-
-
-/**
- * Fired when the plugin is activated.
- *
- * @params	$network_wide	True if WPMU superadmin uses "Network Activate" action, false if WPMU is disabled or plugin is activated on an individual blog 
- */
-register_activation_hook( __FILE__, 'activate' );
-
-function activate( $network_wide ) {
-	// TODO define activation functionality here
-} // end activate
-
-/**
- * Fired when the plugin is deactivated.
- *
- * @params	$network_wide	True if WPMU superadmin uses "Network Activate" action, false if WPMU is disabled or plugin is activated on an individual blog 
- */
-register_deactivation_hook( __FILE__, 'deactivate' );
-
-function deactivate( $network_wide ) {
-	// TODO define deactivation functionality here		
-} // end deactivate
 
 ?>
